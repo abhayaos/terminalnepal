@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <!-- === SEO METADATA === -->
+  <title>Terminal Nepal | Ethical Hacking & Cybersecurity Nepal</title>
+  <meta name="description" content="Terminal Nepal - Ethical hacking collective from Kathmandu. Penetration testing, bug bounty, cybersecurity workshops & awareness in Nepal. White-hat only."/>
+  <meta name="keywords" content="ethical hacking Nepal, cybersecurity Nepal, penetration testing Kathmandu, bug bounty Nepal, Terminal Nepal, white hat hackers Nepal, cyber security training Nepal"/>
+  <meta name="author" content="Terminal Nepal"/>
+  <meta name="robots" content="index, follow"/>
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:title" content="Terminal Nepal ── Ethical Hacking Collective"/>
+  <meta property="og:description" content="We break systems to protect Nepal's digital future. Ethical only. Kathmandu based."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://terminalnepal.github.io"/>
+  <meta property="og:image" content="https://terminalnepal.github.io/assets/terminal-nepal-og.jpg"/> <!-- upload a 1200×630 image later -->
+  <meta property="og:site_name" content="Terminal Nepal"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Terminal Nepal | Ethical Hackers from Kathmandu"/>
+  <meta name="twitter:description" content="White-hat cybersecurity collective. Pentest, training, awareness — Nepal focused."/>
+  <meta name="twitter:image" content="https://terminalnepal.github.io/assets/terminal-nepal-og.jpg"/>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://terminalnepal.github.io"/>
+
+  <!-- Favicon (add your own later) -->
+  <link rel="icon" href="https://terminalnepal.github.io/favicon.ico" type="image/x-icon"/>
+
+  <!-- Google Fonts - Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0d1117;
+            color: #00ff41;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            height: 100vh;
+            overflow: hidden;
+            image-rendering: crisp-edges;
+        }
+        #terminal {
+            height: 100vh;
+            padding: 1.2rem 1.8rem;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        #terminal::-webkit-scrollbar { display: none; }
+
+        .line {
+            margin: 0.28rem 0;
+            line-height: 1.45;
+        }
+
+        .user {
+            color: #00ff9d;
+            font-weight: 500;
+        }
+
+        .host {
+            color: #00b8ff;
+        }
+
+        .path {
+            color: #ff00aa;
+        }
+
+        .dollar {
+            color: #39ff14;
+            margin: 0 0.6rem;
+        }
+
+        .cmd {
+            color: #e0f7fa;
+        }
+
+        .output {
+            color: #b0e0e6;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            color: #ff3366;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 9px;
+            height: 1.1em;
+            background: #00ff41;
+            vertical-align: middle;
+            animation: blink 1.1s infinite step-end;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        #fake-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .glow {
+            text-shadow: 0 0 8px #00ff41, 0 0 16px #00ff41;
+        }
+
+        .banner {
+            color: #00ff9d;
+            text-shadow: 0 0 10px #00ff9d;
+            margin-bottom: 1.4rem;
+        }
+
+        .neon-pink  { color: #ff00f2; text-shadow: 0 0 6px #ff00f2; }
+        .neon-cyan   { color: #00f0ff; text-shadow: 0 0 6px #00f0ff; }
+        .neon-green  { color: #39ff14; text-shadow: 0 0 6px #39ff14; }
+    </style>
+</head>
+<body>
+
+<div id="terminal"></div>
+
+<input type="text" id="fake-input" autocomplete="off" autofocus>
+
+<script>
+// ────────────────────────────────────────────────
+const term = document.getElementById('terminal');
+const input = document.getElementById('fake-input');
+
+let history = [];
+let historyIndex = -1;
+
+const banner = `
+██╗  ██╗ █████╗ ██╗     ██╗         ███╗   ██╗███████╗██████╗  █████╗ ██╗
+██║  ██║██╔══██╗██║     ██║         ████╗  ██║██╔════╝██╔══██╗██╔══██╗██║
+███████║███████║██║     ██║         ██╔██╗ ██║█████╗  ██████╔╝███████║██║
+██╔══██║██╔══██║██║     ██║         ██║╚██╗██║██╔══╝  ██╔══██╗██╔══██║╚═╝
+██║  ██║██║  ██║███████╗███████╗    ██║ ╚████║███████╗██║  ██║██║  ██║██╗
+╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝
+
+                ETHICAL HACKING COLLECTIVE ── NEPAL
+                     We break to protect • 2026
+
+    We do NOT support illegal activities. Permission is mandatory.
+    Type ${'<span class="neon-pink">help</span>'} to see commands
+`.replace(/\n/g, '<br>');
+
+function print(html = '', className = '') {
+    const div = document.createElement('div');
+    div.className = 'line ' + className;
+    div.innerHTML = html;
+    term.appendChild(div);
+    term.scrollTop = term.scrollHeight;
+}
+
+function printBanner() {
+    print(`<span class="banner glow">${banner}</span>`, 'output');
+}
+
+function prompt() {
+    return `<span class="user">kali</span>@<span class="host">terminalnepal</span> <span class="path">~/ethical</span> <span class="dollar">λ</span> `;
+}
+
+let currentLine = null;
+let displayedCmd = '';
+
+function updateLine() {
+    if (!currentLine) {
+        currentLine = document.createElement('div');
+        currentLine.className = 'line';
+        term.appendChild(currentLine);
+    }
+    currentLine.innerHTML = prompt() + `<span class="cmd">${displayedCmd}</span><span class="cursor"></span>`;
+    term.scrollTop = term.scrollHeight;
+}
+
+// ──── Commands ───────────────────────────────────────
+const commands = {
+
+    help: () => `
+Available commands:
+
+  <span class="neon-cyan">about</span>          →  who we are
+  <span class="neon-cyan">ethics</span>         →  our code of conduct
+  <span class="neon-cyan">services</span>       →  what we actually do (legally)
+  <span class="neon-cyan">whoami</span>         →  show full system / user context (kali style)
+  <span class="neon-cyan">clear</span> / <span class="neon-cyan">cls</span>   →  clear screen
+  <span class="neon-cyan">neofetch</span>       →  fancy system info with kali logo
+  <span class="neon-cyan">matrix</span>         →  feel the digital rain
+  <span class="neon-pink">sudo rm -rf /</span>  →  classic troll command (don't)
+    `,
+
+    about: () => `
+We are TERMINAL NEPAL ── group of white-hat hackers, bug hunters
+and security researchers from Kathmandu and beyond.
+
+Focused on:
+• Responsible disclosure
+• Security education in Nepali community
+• CTF & bug-bounty culture
+• Helping companies secure their systems
+
+We hack to make Nepal digitally safer ── never to harm.
+    `,
+
+    ethics: () => `
+Our unbreakable rules:
+
+1. No unauthorized access — ever
+2. Permission / contract first
+3. Full disclosure to owner only
+4. No data destruction or extortion
+5. No selling/leaking exploits or data
+6. We teach, we protect, we respect privacy
+
+Follow: <span class="neon-cyan">https://www.ec-council.org/code-of-ethics/</span>
+         <span class="neon-cyan">https://www.bugcrowd.com/ethics/</span>
+    `,
+
+    services: () => `
+What we offer (ethically & professionally):
+
+• Web & API penetration testing
+• Mobile app security audits
+• Network & infrastructure pentest
+• Red team / purple team exercises
+• Secure code review
+• Bug bounty program setup & triage
+• Cybersecurity awareness workshops
+
+Contact: terminalnepal [at] proton.me
+    `,
+
+    whoami: () => `
+uid=1000(kali) gid=1000(kali) groups=1000(kali),4(adm),24(cdrom),27(sudo),29(audio),44(video),46(plugdev),109(netdev),114(bluetooth)
+hostname     : terminalnepal.eth
+kernel       : Linux 6.11.0-kali-amd64 x86_64
+os           : Kali GNU/Linux Rolling (2026.1 expected vibe)
+architecture : x86_64
+shell        : /usr/bin/zsh
+user         : kali (effective: root context in many tools)
+location     : Kathmandu • Bagmati • Nepal (simulated)
+uptime       : 13 days, 4:20 hours (always online bro)
+memory       : 8.2GiB / 15.6GiB
+cpu          : AMD Ryzen 7 5800H (16) @ 3.200GHz
+gpu          : NVIDIA GeForce RTX 3060 Mobile / Intel (hybrid)
+disk         : /dev/nvme0n1p3  256GB / 512GB (root encrypted)
+network      : eth0 • public_ip hidden • tor ready
+ethical mode : ENABLED • no illegal ops allowed
+    `,
+
+    neofetch: () => `
+<span class="neon-green">                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</span>
+<span class="neon-green">                  ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">                 ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">                ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">               ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">              ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">             ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">            ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">           ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">          ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">         ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">        ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">       ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">      ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">     ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">    ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">   ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green">  ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+<span class="neon-green"> ▄▀░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▀▄</span>
+
+               <span class="neon-pink">kali</span>@<span class="neon-cyan">terminalnepal</span> 
+               <span class="neon-green">───────────────</span>
+               <span class="neon-pink">OS</span>: Kali GNU/Linux Rolling
+               <span class="neon-pink">Host</span>: terminalnepal-eth
+               <span class="neon-pink">Kernel</span>: 6.11.0-kali-amd64
+               <span class="neon-pink">Uptime</span>: 13 days, 4:20
+               <span class="neon-pink">Packages</span>: 69420 (apt)
+               <span class="neon-pink">Shell</span>: zsh 5.9
+               <span class="neon-pink">Resolution</span>: 1920x1080
+               <span class="neon-pink">DE</span>: XFCE
+               <span class="neon-pink">WM</span>: Xfwm4
+               <span class="neon-pink">Theme</span>: Kali-Dark [GTK3]
+               <span class="neon-pink">Icons</span>: Kali
+               <span class="neon-pink">Terminal</span>: foot
+               <span class="neon-pink">CPU</span>: AMD Ryzen 7 5800H (16) @ 3.200GHz
+               <span class="neon-pink">GPU</span>: NVIDIA GeForce RTX 3060 Mobile
+               <span class="neon-pink">Memory</span>: 8204MiB / 15960MiB
+
+    Ethical hacking mode: <span class="neon-green">ACTIVE</span>
+    `,
+
+    matrix: () => {
+        print("Initiating digital rain...", "output");
+        setTimeout(() => {
+            term.innerHTML = '';
+            printBanner();
+            print("<br><span class='error'>Matrix mode activated (press Ctrl+C to exit simulation)</span><br>", "output");
+            startMatrixRain();
+        }, 1200);
+        return "";
+    },
+
+    "sudo rm -rf /": () => `
+Nice try anon...
+
+<span class="error">[ sudo ] password for kali: ████████</span>
+<span class="error">Authentication failed. Permission denied.</span>
+
+We don't play that game here.
+    `
+};
+
+// ──── Matrix rain effect ────────────────────────────────
+let matrixInterval = null;
+
+function startMatrixRain() {
+    if (matrixInterval) clearInterval(matrixInterval);
+
+    const chars = "01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+    const columns = Math.floor(window.innerWidth / 14);
+
+    const drops = Array(columns).fill(1);
+
+    matrixInterval = setInterval(() => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'line output';
+        lineDiv.style.opacity = '0.85';
+
+        let lineContent = '';
+        for (let i = 0; i < columns; i++) {
+            if (Math.random() > 0.975) drops[i] = 0;
+
+            if (drops[i] * 14 > window.innerHeight) {
+                drops[i] = 0;
+            }
+
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            const opacity = Math.random() * 0.5 + 0.5;
+            const color = Math.random() > 0.3 ? '#00ff41' : '#00aa33';
+
+            lineContent += `<span style="color:${color};opacity:${opacity}">${text}</span>`;
+            drops[i]++;
+        }
+
+        lineDiv.innerHTML = lineContent;
+        term.appendChild(lineDiv);
+        term.scrollTop = term.scrollHeight;
+
+        // Fade/remove old lines to prevent overflow
+        if (term.children.length > 120) {
+            term.removeChild(term.children[0]);
+        }
+    }, 60);
+}
+
+function stopMatrix() {
+    if (matrixInterval) {
+        clearInterval(matrixInterval);
+        matrixInterval = null;
+        term.innerHTML = '';
+        printBanner();
+        print("<br><span class='neon-green'>Matrix connection terminated. Back to ethical reality.</span><br>", "output");
+    }
+}
+
+// ──── Main input logic ──────────────────────────────────
+input.addEventListener('input', () => {
+    displayedCmd = input.value;
+    updateLine();
+});
+
+input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+
+        const cmdRaw = input.value.trim();
+        if (!cmdRaw) {
+            updateLine();
+            input.value = '';
+            return;
+        }
+
+        const cmd = cmdRaw.toLowerCase();
+        history.push(cmdRaw);
+        historyIndex = history.length;
+
+        // Echo the typed command
+        currentLine.innerHTML = prompt() + `<span class="cmd">${cmdRaw}</span>`;
+        currentLine = null;
+
+        let output = "";
+
+        if (cmd === "clear" || cmd === "cls") {
+            term.innerHTML = '';
+            printBanner();
+        }
+        else if (cmd === "matrix" || cmd === "cmatrix") {
+            output = commands.matrix();
+        }
+        else if (cmd in commands) {
+            output = commands[cmd]();
+        }
+        else if (cmd.startsWith("echo ")) {
+            output = cmdRaw.substring(5);
+        }
+        else if (cmd === "exit" || cmd === "logout") {
+            output = "<span class='error'>logout</span><br>Session terminated. Stay ethical.</br>";
+            setTimeout(() => location.reload(), 1800);
+        }
+        else {
+            output = `<span class="error">zsh: command not found: ${cmdRaw}</span><br><span class="error">Try 'help' for available commands</span>`;
+        }
+
+        if (output) {
+            print(`<span class="output">${output}</span>`);
+        }
+
+        input.value = '';
+        displayedCmd = '';
+        updateLine();
+    }
+    else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIndex > 0) {
+            historyIndex--;
+            input.value = history[historyIndex] || '';
+            displayedCmd = input.value;
+            updateLine();
+        }
+    }
+    else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            input.value = history[historyIndex] || '';
+            displayedCmd = input.value;
+            updateLine();
+        } else {
+            historyIndex = history.length;
+            input.value = '';
+            displayedCmd = '';
+            updateLine();
+        }
+    }
+    else if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+        if (matrixInterval) {
+            e.preventDefault();
+            stopMatrix();
+        }
+    }
+});
+
+// Initial setup
+printBanner();
+updateLine();
+
+// Keep focus always
+document.addEventListener('click', () => input.focus());
+window.addEventListener('focus', () => input.focus());
+
+
+
+</script>
+
+<!-- Structured Data - helps Google understand who you are -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Terminal Nepal",
+  "url": "https://terminalnepal.github.io",
+  "description": "Ethical hacking and cybersecurity collective based in Kathmandu, Nepal.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Kathmandu",
+    "addressRegion": "Bagmati",
+    "addressCountry": "NP"
+  },
+}
+</script>
+</body>
+</html>
